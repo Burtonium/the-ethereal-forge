@@ -6,7 +6,7 @@ import parseMetadata, { NFTMetadata } from "~~/utils/parseNFTMetadata";
 const tokenIds = [0, 1, 2, 3, 4, 5];
 
 const useTokensMetadata = () => {
-  const [metadatas, setMetadatas] = useState<NFTMetadata[]>([]);
+  const [metadatas, setMetadatas] = useState<NFTMetadata[]>();
   const uriRead = useScaffoldContractRead({
     contractName: "TheForgeTokens",
     functionName: "uri",

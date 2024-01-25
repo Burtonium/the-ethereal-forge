@@ -61,7 +61,7 @@ const ForgeCollection: FC<Props> = ({ address }) => {
     [forge],
   );
 
-  return balances.isLoading ? (
+  return metadatas === undefined || balances.isLoading ? (
     "Loading collection..."
   ) : (
     <>
