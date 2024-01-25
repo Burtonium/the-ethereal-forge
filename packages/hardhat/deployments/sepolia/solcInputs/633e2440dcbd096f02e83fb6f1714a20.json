@@ -1,0 +1,36 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/TheForge.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity 0.8.22;\n\ninterface IMyERC1155Token {\n    function forgeMint(address account, uint256 id, uint256 amount) external;\n    function forgeBurn(address account, uint256 id, uint256 amount) external;\n}\n\ncontract TheForge {\n    IMyERC1155Token public immutable tokenContract;\n    error NonForgeableTokenId(uint256 tokenId);\n\n    constructor(address _tokenContract) {\n        tokenContract = IMyERC1155Token(_tokenContract);\n    }\n\n    function forge(uint256 tokenId) public {\n        if (tokenId < 3 || tokenId > 6) {\n            revert NonForgeableTokenId(tokenId);\n        }\n\n        if (tokenId == 3) {\n            tokenContract.forgeBurn(msg.sender, 0, 1);\n            tokenContract.forgeBurn(msg.sender, 1, 1);\n        } else if (tokenId == 4) {\n            tokenContract.forgeBurn(msg.sender, 1, 1);\n            tokenContract.forgeBurn(msg.sender, 2, 1);\n        } else if (tokenId == 5) {\n            tokenContract.forgeBurn(msg.sender, 0, 1);\n            tokenContract.forgeBurn(msg.sender, 2, 1);\n        } else if (tokenId == 6) {\n            tokenContract.forgeBurn(msg.sender, 0, 1);\n            tokenContract.forgeBurn(msg.sender, 1, 1);\n            tokenContract.forgeBurn(msg.sender, 2, 1);\n        }\n\n        tokenContract.forgeMint(msg.sender, tokenId, 1);\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 10000
+    },
+    "evmVersion": "paris",
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}

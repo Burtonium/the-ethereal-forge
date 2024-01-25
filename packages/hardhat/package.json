@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "account": "hardhat run scripts/listAccount.ts",
+    "start-miner": "hardhat run scripts/blockMiner.ts",
     "chain": "hardhat node --network hardhat --no-deploy",
     "compile": "hardhat compile",
     "deploy": "hardhat deploy",
@@ -45,7 +46,7 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.8.1",
+    "@openzeppelin/contracts": "5.0.1",
     "@typechain/ethers-v6": "^0.5.1",
     "dotenv": "^16.0.3",
     "envfile": "^6.18.0",
