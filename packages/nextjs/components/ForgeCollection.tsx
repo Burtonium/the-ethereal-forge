@@ -1,8 +1,9 @@
 "use client";
 
 import { FC, useCallback } from "react";
-import { useCountdown } from "usehooks-ts";
+import { usePublicClient } from "wagmi";
 import { useScaffoldContractRead, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
+import useCountdown from "~~/hooks/useCountdown";
 import useTokens from "~~/hooks/useTokensMetadata";
 import { ipfsToHttps } from "~~/utils/ipfs";
 
@@ -13,12 +14,10 @@ type Props = {
 const tokenIds = [0, 1, 2, 3, 4, 5];
 
 const ForgeCollection: FC<Props> = ({ address }) => {
+  const client = usePublicClient();
   const metadatas = useTokens();
-  const [cooldown, { startCountdown: startCooldown, resetCountdown }] = useCountdown({
-    countStart: 60,
-    intervalMs: 1000,
-  });
-  const isCoolingDown = cooldown !== 60 && cooldown !== 0;
+  const [cooldown, setCooldownTo] = useCountdown();
+  const isCoolingDown = cooldown !== 0;
   const balances = useScaffoldContractRead({
     contractName: "TheForgeTokens",
     functionName: "balanceOfBatch",
@@ -28,6 +27,14 @@ const ForgeCollection: FC<Props> = ({ address }) => {
   const mint = useScaffoldContractWrite({
     contractName: "TheForgeTokens",
     functionName: "mint",
+    onBlockConfirmation: async tx => {
+      const block = await client.getBlock({
+        blockNumber: tx.blockNumber,
+      });
+
+      setCooldownTo(block.timestamp + BigInt(60));
+      await balances.refetch();
+    },
     args: [BigInt(0)],
   });
 
@@ -35,28 +42,23 @@ const ForgeCollection: FC<Props> = ({ address }) => {
     (id: number) => async () => {
       const result = await mint.writeAsync({ args: [BigInt(id)] });
       if (result) {
-        resetCountdown();
-        startCooldown();
         await balances.refetch();
       }
     },
-    [balances, mint, resetCountdown, startCooldown],
+    [balances, mint],
   );
 
   const forge = useScaffoldContractWrite({
     contractName: "TheForge",
     functionName: "forge",
-    blockConfirmations: 3,
+    onBlockConfirmation: async () => {
+      await balances.refetch();
+    },
     args: [BigInt(0)],
   });
 
   const forgeItem = useCallback(
-    (id: number) => async () => {
-      const result = await forge.writeAsync({ args: [BigInt(id)] });
-      if (result) {
-        await balances.refetch();
-      }
-    },
+    (id: number) => async () => forge.writeAsync({ args: [BigInt(id)] }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [forge],
   );
@@ -85,11 +87,17 @@ const ForgeCollection: FC<Props> = ({ address }) => {
             <p>Balance: {balances.data?.[i].toString()}</p>
             {metadata.category === "Resource" && (
               <button
-                disabled={isCoolingDown}
+                disabled={isCoolingDown || mint.isLoading || mint.isMining}
                 onClick={mintResource(i)}
                 className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
               >
-                {isCoolingDown ? `Cooldown ${cooldown}` : "Mint"}
+                {isCoolingDown
+                  ? `Cooldown ${cooldown}`
+                  : mint.isLoading
+                  ? "Minting..."
+                  : mint.isMining
+                  ? "Mining..."
+                  : "Mint"}
               </button>
             )}
             {metadata.category === "Craftable" && (
