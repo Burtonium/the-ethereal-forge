@@ -57,11 +57,7 @@ const ForgeCollection: FC<Props> = ({ address }) => {
     args: [BigInt(0)],
   });
 
-  const forgeItem = useCallback(
-    (id: number) => async () => forge.writeAsync({ args: [BigInt(id)] }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [forge],
-  );
+  const forgeItem = useCallback((id: number) => async () => forge.writeAsync({ args: [BigInt(id)] }), [forge]);
 
   return metadatas === undefined || balances.isLoading ? (
     "Loading collection..."
